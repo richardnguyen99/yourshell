@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.ejs": "ejs",
+    "yrsh.h": "c",
+    "readline.h": "c"
+  }
+}
