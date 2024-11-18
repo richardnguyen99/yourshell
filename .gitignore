@@ -53,3 +53,8 @@ dkms.conf
 
 # Build results
 yrsh
+
+# Lexical and grammar generated files
+*.yy.*
+*.tab.*
+src/y.output
