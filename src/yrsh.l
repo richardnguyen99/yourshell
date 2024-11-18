@@ -29,6 +29,10 @@
     return AND;
 }
 
+"&>>" {
+    return AMPERSANDAPPEND;
+}
+
 "||" {
     return OR;
 }
@@ -55,7 +59,7 @@
     return WORD;
 }
 
-.    {
+. {
     /* Invalid character in input */
     return NOTOKEN;
 }
