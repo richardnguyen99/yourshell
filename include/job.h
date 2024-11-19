@@ -22,8 +22,14 @@ struct job* job_new();
 
 int job_add_command(struct job* job, const char* command_name);
 
+int job_add_infile(struct job* job, const char* infile);
+int job_add_outfile(struct job* job, const char* outfile);
+int job_add_errfile(struct job* job, const char* errfile);
+int job_add_appendfile(struct job* job, const char* appendfile);
+
 void
 job_free(struct job* job);
+
 
 extern struct job* job;
 

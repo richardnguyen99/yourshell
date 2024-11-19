@@ -23,7 +23,7 @@ struct command* command_new(const char* name)
 
 int command_add_arg(struct command* cmd, const char* arg)
 {
-    if (cmd->nargs >= 20)
+    if (cmd->nargs >= MAX_ARGS)
     {
         return -1;
     }

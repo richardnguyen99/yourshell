@@ -48,11 +48,11 @@ complex_command:
         printf("command_and_args iomodifier_list ampersandmodifier SHNEWLINE\n");
     }
     | command_and_args piped_list iomodifier_list SHNEWLINE {
-        printf("command_and_args piped_list iomodifier_list SHNEWLINE\n");
+
 
         for (size_t i = 0; i < job->ncommands; ++i)
         {
-            printf(BLUE "Command@%p" RESET " being executed (cmd: %s, args: [", (void*)job->commands[i], job->commands[i]->name);
+            printf(RED "Command@%p" RESET " being executed (cmd: %s, args: [", (void*)job->commands[i], job->commands[i]->name);
 
             for (size_t j = 0; j < job->commands[i]->nargs; ++j)
             {
@@ -65,6 +65,12 @@ complex_command:
             }
 
             printf("])\n");
+        }
+
+        if (yylval.string_val != NULL)
+        {
+            free(yylval.string_val);
+            yylval.string_val = NULL;
         }
     }
     | command_and_args iomodifier_list SHNEWLINE {
@@ -79,20 +85,19 @@ simple_command:
     ;
 
 piped_list:
-    piped_list piped_command
+    piped_list piped_command 
     |
     ;
 
 piped_command:
     PIPE command_and_args {
-        printf("piped_command\n");
+        job->commands[job->ncommands - 2]->is_piped = 1;
+        printf(MAGENTA "Command@%p" RESET " marked as piped\n", (void*)job->commands[job->ncommands - 2]);
     }
     ;
 
 command_and_args:
-    command_word arg_list {
-        printf("command_and_args\n");
-    }
+    command_word arg_list 
     ;
 
 arg_list:
@@ -102,15 +107,15 @@ arg_list:
 
 argument:
     WORD {
-        printf("argument: %s\n", $1);
         command_add_arg(job->commands[job->ncommands - 1], $1);
+        printf(GREEN "Command@%p" RESET " argument being added (arg: %s)\n", (void*)job->commands[job->ncommands - 1], job->commands[job->ncommands - 1]->args[job->commands[job->ncommands - 1]->nargs - 1]);
     }
     ;
 
 command_word:
     WORD {
-        printf("command_word: %s\n", $1);
         job_add_command(job, $1);
+        printf(YELLOW "Command@%p" RESET " being added (cmd: %s)\n", (void*)job->commands[job->ncommands - 1], job->commands[job->ncommands - 1]->name);
     }
     ;
 
@@ -128,7 +133,8 @@ iomodifier:
 
 iomodifier_ipt:
     INPUT WORD {
-        printf("iomodifier_ipt: < %s\n", $2);
+        job_add_infile(job, $2);
+        printf(BLUE "Job@%p I/O INPUT MODIFIER" RESET " being added (file: %s)\n", (void*)job, $2);
     }
     ;
 
@@ -139,7 +145,8 @@ ampersandappendmodifier:
 
 iomodifier_opt:
     REDIRECT WORD {
-        printf("iomodifier_opt output: > %s\n", $2);
+        job_add_outfile(job, $2);
+        printf(BLUE "Job@%p I/O REDIRECT MODIFIER" RESET " being added (file: %s)\n", (void*)job, $2);
     }
     ;
 

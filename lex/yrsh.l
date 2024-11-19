@@ -5,6 +5,11 @@
 
 %%
 \n {
+    if (yylval.string_val != NULL) {
+        free(yylval.string_val);
+        yylval.string_val = NULL;
+    }
+
     yylval.string_val = strdup(yytext);
     return SHNEWLINE;
 }
@@ -50,7 +55,11 @@
 }
 
 [^ \t\n&<>|]+  {
-    /* Allow any character except for special characters */
+    if (yylval.string_val != NULL) {
+        free(yylval.string_val);
+        yylval.string_val = NULL;
+    }
+
     yylval.string_val = strdup(yytext);
     return WORD;
 }

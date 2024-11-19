@@ -57,4 +57,7 @@ yrsh
 # Lexical and grammar generated files
 *.yy.*
 *.tab.*
-src/y.output
+**/*/y.output
+
+# Accidental valgrind output
+vgcore.*

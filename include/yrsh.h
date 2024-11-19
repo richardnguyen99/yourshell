@@ -12,6 +12,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
+#include <errno.h>
+#include <stdbool.h>
+#include <ctype.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
