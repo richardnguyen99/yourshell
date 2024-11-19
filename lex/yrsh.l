@@ -6,15 +6,11 @@
 %%
 \n {
     yylval.string_val = strdup(yytext);
-    return NEWLINE;
+    return SHNEWLINE;
 }
 
 [ \t]+ {
     // Ignore whitespace
-}
-
-"cd" {
-    return CD;
 }
 
 "&" {

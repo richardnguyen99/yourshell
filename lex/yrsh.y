@@ -1,6 +1,7 @@
 %{
-#include <stdio.h>
-#include <string.h>
+#include <yrsh.h>
+#include <command.h>
+#include <job.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,7 +16,7 @@ extern "C" {
 %}
 
 %token <string_val> WORD
-%token NOTOKEN GREAT NEWLINE AMPERSAND PIPE APPEND SMALL AMPERSANDAPPEND LESS CD AND OR SEMICOLON REDIRECT INPUT
+%token NOTOKEN GREAT SHNEWLINE AMPERSAND PIPE APPEND SMALL AMPERSANDAPPEND AND OR SEMICOLON REDIRECT INPUT
 
 %union {
     char *string_val;
@@ -35,27 +36,44 @@ commands:
 command:
     complex_command
     | simple_command
-    | NEWLINE 
-    | error NEWLINE { yyerrok; }
+    | SHNEWLINE 
+    | error SHNEWLINE { yyerrok; }
     ;
 
 complex_command:
-    command_and_args piped_list iomodifier_list ampersandmodifier NEWLINE {
-        printf("command_and_args piped_list iomodifier_list ampersandmodifier NEWLINE\n");
+    command_and_args piped_list iomodifier_list ampersandmodifier SHNEWLINE {
+        printf("command_and_args piped_list iomodifier_list ampersandmodifier SHNEWLINE\n");
     }
-    | command_and_args iomodifier_list ampersandmodifier NEWLINE {
-        printf("command_and_args iomodifier_list ampersandmodifier NEWLINE\n");
+    | command_and_args iomodifier_list ampersandmodifier SHNEWLINE {
+        printf("command_and_args iomodifier_list ampersandmodifier SHNEWLINE\n");
     }
-    | command_and_args piped_list iomodifier_list NEWLINE {
-        printf("command_and_args piped_list iomodifier_list NEWLINE\n");
+    | command_and_args piped_list iomodifier_list SHNEWLINE {
+        printf("command_and_args piped_list iomodifier_list SHNEWLINE\n");
+
+        for (size_t i = 0; i < job->ncommands; ++i)
+        {
+            printf(BLUE "Command@%p" RESET " being executed (cmd: %s, args: [", (void*)job->commands[i], job->commands[i]->name);
+
+            for (size_t j = 0; j < job->commands[i]->nargs; ++j)
+            {
+                printf("%s", job->commands[i]->args[j]);
+
+                if (j < job->commands[i]->nargs - 1)
+                {
+                    printf(",");
+                }
+            }
+
+            printf("])\n");
+        }
     }
-    | command_and_args iomodifier_list NEWLINE {
-        printf("command_and_args iomodifier_list NEWLINE\n");
+    | command_and_args iomodifier_list SHNEWLINE {
+        printf("command_and_args iomodifier_list SHNEWLINE\n");
     }
     ;
 
 simple_command:
-    command_and_args iomodifier_opt NEWLINE {
+    command_and_args iomodifier_opt SHNEWLINE {
         printf("simple_command\n");
     }
     ;
@@ -85,12 +103,14 @@ arg_list:
 argument:
     WORD {
         printf("argument: %s\n", $1);
+        command_add_arg(job->commands[job->ncommands - 1], $1);
     }
     ;
 
 command_word:
     WORD {
         printf("command_word: %s\n", $1);
+        job_add_command(job, $1);
     }
     ;
 

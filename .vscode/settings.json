@@ -4,6 +4,9 @@
     "yrsh.h": "c",
     "readline.h": "c",
     "lex.yy.h": "c",
-    "y.tab.h": "c"
+    "y.tab.h": "c",
+    "string.h": "c",
+    "command.h": "c",
+    "job.h": "c"
   }
 }
