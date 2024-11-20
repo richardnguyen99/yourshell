@@ -22,7 +22,7 @@ void handle_ctrl_c(int sig)
         line = NULL;
     }
 
-    printf("Exited yourshell (signo: %d)\n", sig);
+    printf("\nExited yourshell (signo: %d)\n", sig);
     fflush(stdout);
 
     exit(0);
@@ -59,6 +59,34 @@ setup_signal_handler()
     sigaction(SIGCHLD, &sa, NULL);
 }
 
+void format_current_path(char* path, const size_t size)
+{
+    if (path == NULL)
+        return;
+
+    if (strlen(path) > size)
+    {
+        path[size - 1] = '\0';
+        return;
+    }
+
+    char* home = getenv("HOME");
+    if (home == NULL)
+        return;
+
+    if (strncmp(path, home, strlen(home)) == 0)
+    {
+        char* new_path = malloc(size);
+        if (new_path == NULL)
+            return;
+
+        memset(new_path, 0, size);
+        snprintf(new_path, size, "~%s", path + strlen(home));
+        strncpy(path, new_path, size);
+        free(new_path);
+    }
+}
+
 int
 main()
 {
@@ -67,16 +95,21 @@ main()
     for (;;)
     {
         job = job_new();
-
         if (job == NULL)
             exit(EXIT_FAILURE);
 
-        line = readline("yrsh> ");
+        char path[4096];
+        memset(path, 0, sizeof(path));
 
+        format_current_path(getcwd(path, sizeof(path)), sizeof(path));
+
+        char prompt[4096];
+        memset(prompt, 0, sizeof(prompt));
+        snprintf(prompt, sizeof(prompt), GREEN "yrsh" RESET "@" GREEN "%s" RESET "> ", path);
+
+        line = readline(prompt);
         if (line == NULL)
             exit(EXIT_FAILURE);
-
-        fflush(stdout);
 
         /* Create a new string with new line for lexer only.
            Meanwhile, readline does not need new line characters at the end of
@@ -110,6 +143,7 @@ main()
         job_free(job);
 
         job = NULL;
+        line = NULL;
     }
 
 
