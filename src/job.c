@@ -117,12 +117,206 @@ int job_add_appendfile(struct job* job, const char* appendfile)
 
 int job_execute(struct job* job)
 {
-    if (job->ncommands == 0)
+    int fd[2];
+    int pid, prev_fd = 0;
+
+    for (size_t i = 0; i < job->ncommands; ++i)
     {
+        /* Check if the command is cd */
+        if (strcmp(job->commands[i]->name, "cd") == 0)
+        {
+            if (job_change_directory(job->commands[i]->args[1]) == -1)
+            {
+                perror("cd");
+                return -1;
+            }
+        }
+
+
+        if (i < job->ncommands - 1)
+        {
+            if (pipe(fd) == -1)
+            {
+                perror("pipe");
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        pid = fork();
+
+        if (pid == -1)
+        {
+            perror("fork");
+            exit(EXIT_FAILURE);
+        }
+
+        /* Child process */
+        if (pid == 0)
+        {
+            if (job->ncommands > 1)
+            {
+                /* First command in the job */
+                if (i == 0)
+                {
+                    /* Redirect the write end of the pipe to standard output
+                       Data written to the write end of pipe will be buffered
+                       until the read end of the pipe is read.
+                     */
+
+                    if (dup2(fd[1], STDOUT_FILENO) == -1)
+                    {
+                        perror("dup2");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    /* Close the read end of the pipe */
+
+                    if (close(fd[0]) == -1)
+                    {
+                        perror("close");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+                /* Last command in the job */
+                else if (i == job->ncommands - 1)
+                {
+                    if (dup2(prev_fd, STDIN_FILENO) == -1)
+                    {
+                        perror("dup2");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+                /* Middle command in the job */
+                else
+                {
+                    if (dup2(prev_fd, STDIN_FILENO) == -1)
+                    {
+                        perror("dup2");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    if (dup2(fd[1], STDOUT_FILENO) == -1)
+                    {
+                        perror("dup2");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    if (close(prev_fd) == -1)
+                    {
+                        perror("close");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    if (close(fd[0]) == -1)
+                    {
+                        perror("close");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
+
+            execvp(job->commands[i]->name, job->commands[i]->args);
+
+            // Maybe handle some error if the code reaches here
+        }
+        else {
+            printf("Child process %d created\n", pid);
+            printf(RED "Command@%p" RESET " being executed (cmd: %s, args: [", (void*)job->commands[i], job->commands[i]->name);
+
+            for (size_t j = 0; j < job->commands[i]->nargs; ++j)
+            {
+                printf("%s", job->commands[i]->args[j]);
+
+                if (j < job->commands[i]->nargs - 1)
+                {
+                    printf(",");
+                }
+            }
+
+            printf("])\n");
+
+            if (job->ncommands > 1)
+            {
+                if (i < job->ncommands - 1)
+                {
+                    if (close(fd[1]) == -1)
+                    {
+                        perror("close");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+
+                prev_fd = fd[0];
+            }
+        }
+
+    }
+
+    int status;
+    pid_t wpid;
+
+    while ((wpid = waitpid(-1, &status, 0)) > 0)
+    {
+        if (WIFEXITED(status))
+        {
+        }
+        else
+        {
+            printf("Child process %d terminated abnormally\n", wpid);
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int job_change_directory(const char* path)
+{
+    char current_path[4096];
+    memset(current_path, 0, sizeof(current_path));
+
+    if (getcwd(current_path, sizeof(current_path)) == NULL)
+    {
+        return -1;
+    }
+
+    /* check if arg is ~ */
+    if (strcmp(path, "~") == 0)
+    {
+        if (chdir(getenv("HOME")) == -1)
+            return -1;
+
         return 0;
     }
 
+    /* Check if arg is - */
+    if (strcmp(path, "-") == 0)
+    {
+        char* oldpwd = getenv("OLDPWD");
 
+        if (oldpwd == NULL)
+        {
+            fprintf(stderr, "OLDPWD not set\n");
+            return -1;
+        }
+
+        if (chdir(oldpwd) == -1)
+        {
+            return -1;
+        }
+
+        return 0;
+    }
+
+    if (chdir(path) == -1)
+    {
+        return -1;
+    }
+
+    if (setenv("OLDPWD", current_path, 1) == -1)
+    {
+        return -1;
+    }
 
     return 0;
 }

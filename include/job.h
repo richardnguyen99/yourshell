@@ -29,6 +29,7 @@ int job_add_errfile(struct job* job, const char* errfile);
 int job_add_appendfile(struct job* job, const char* appendfile);
 
 int job_execute(struct job* job);
+int job_change_directory(const char* path);
 void job_prompt(struct job** job);
 
 void
