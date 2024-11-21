@@ -49,6 +49,8 @@ complex_command:
     }
     | command_and_args piped_list iomodifier_list SHNEWLINE {
 
+        int fd[2];
+        int pid;
 
         for (size_t i = 0; i < job->ncommands; ++i)
         {
@@ -65,13 +67,79 @@ complex_command:
             }
 
             printf("])\n");
+
+            if (i < job->ncommands - 1)
+            {
+                if (pipe(fd) == -1)
+                {
+                    perror("pipe");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            pid = fork();
+
+            if (pid == -1)
+            {
+                perror("fork");
+                exit(EXIT_FAILURE);
+            }
+
+            /* Child process */
+            if (pid == 0) 
+            {
+                if (job->ncommands > 1)
+                {
+                    if (i == 0)
+                    {
+                        close(fd[0]); /* Close unused read end */
+                        dup2(fd[1], STDOUT_FILENO); /* Connect stdout to write end of pipe */
+                        close(fd[1]); /* Close write end of pipe */
+                    }
+                    else if (i == job->ncommands - 1)
+                    {
+                        close(fd[1]); /* Close unused write end */
+                        dup2(fd[0], STDIN_FILENO); /* Connect stdin to read end of pipe */
+                        close(fd[0]); 
+                    }
+                    else
+                    {
+                        dup2(fd[0], STDIN_FILENO);
+                        close(fd[0]);
+                        dup2(fd[1], STDOUT_FILENO);
+                        close(fd[1]);
+                    }
+                }
+
+                execvp(job->commands[i]->name, job->commands[i]->args);
+            } 
+
         }
+
 
         if (yylval.string_val != NULL)
         {
             free(yylval.string_val);
             yylval.string_val = NULL;
         }
+
+        int status;
+        pid_t wpid;
+
+        while ((wpid = waitpid(-1, &status, 0)) > 0)
+        {
+            if (WIFEXITED(status))
+            {
+                printf("Child process %d terminated with status %d\n", wpid, WEXITSTATUS(status));
+            }
+            else
+            {
+                printf("Child process %d terminated abnormally\n", wpid);
+            }
+        }
+
+        job_prompt(&job);
+
     }
     | command_and_args iomodifier_list SHNEWLINE {
         printf("command_and_args iomodifier_list SHNEWLINE\n");

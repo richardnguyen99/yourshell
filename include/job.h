@@ -10,6 +10,7 @@ struct job
 {
     struct command* commands[MAX_COMMANDS];
     size_t ncommands;
+    size_t ncommands_executed;
 
     char* infile;
     char* outfile;
@@ -26,6 +27,9 @@ int job_add_infile(struct job* job, const char* infile);
 int job_add_outfile(struct job* job, const char* outfile);
 int job_add_errfile(struct job* job, const char* errfile);
 int job_add_appendfile(struct job* job, const char* appendfile);
+
+int job_execute(struct job* job);
+void job_prompt(struct job** job);
 
 void
 job_free(struct job* job);
