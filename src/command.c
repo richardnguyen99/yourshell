@@ -16,7 +16,18 @@ struct command* command_new(const char* name)
         return NULL;
     }
 
-    cmd->nargs = 0;
+    /* execvp(command, *args) while args[0]  should be the command */
+
+    cmd->args[0] = strdup(name);
+
+    if (cmd->args[0] == NULL)
+    {
+        free(cmd->name);
+        free(cmd);
+        return NULL;
+    }
+
+    cmd->nargs = 1;
 
     return cmd;
 }

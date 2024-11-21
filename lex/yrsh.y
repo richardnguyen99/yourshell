@@ -50,23 +50,10 @@ complex_command:
     | command_and_args piped_list iomodifier_list SHNEWLINE {
 
         int fd[2];
-        int pid;
+        int pid, prev_fd = 0;
 
         for (size_t i = 0; i < job->ncommands; ++i)
         {
-            printf(RED "Command@%p" RESET " being executed (cmd: %s, args: [", (void*)job->commands[i], job->commands[i]->name);
-
-            for (size_t j = 0; j < job->commands[i]->nargs; ++j)
-            {
-                printf("%s", job->commands[i]->args[j]);
-
-                if (j < job->commands[i]->nargs - 1)
-                {
-                    printf(",");
-                }
-            }
-
-            printf("])\n");
 
             if (i < job->ncommands - 1)
             {
@@ -90,29 +77,99 @@ complex_command:
             {
                 if (job->ncommands > 1)
                 {
+                    /* First command in the job */
                     if (i == 0)
                     {
-                        close(fd[0]); /* Close unused read end */
-                        dup2(fd[1], STDOUT_FILENO); /* Connect stdout to write end of pipe */
-                        close(fd[1]); /* Close write end of pipe */
+                        /* Redirect the write end of the pipe to standard output
+                           Data written to the write end of pipe will be buffered
+                           until the read end of the pipe is read.  
+                         */
+
+                        if (dup2(fd[1], STDOUT_FILENO) == -1)
+                        {
+                            perror("dup2");
+                            exit(EXIT_FAILURE);
+                        }
+
+                        /* Close the read end of the pipe */
+
+                        if (close(fd[0]) == -1)
+                        {
+                            perror("close");
+                            exit(EXIT_FAILURE);
+                        }
                     }
+                    /* Last command in the job */
                     else if (i == job->ncommands - 1)
                     {
-                        close(fd[1]); /* Close unused write end */
-                        dup2(fd[0], STDIN_FILENO); /* Connect stdin to read end of pipe */
-                        close(fd[0]); 
+                        if (dup2(prev_fd, STDIN_FILENO) == -1)
+                        {
+                            perror("dup2");
+                            exit(EXIT_FAILURE);
+                        }
                     }
+                    /* Middle command in the job */
                     else
                     {
-                        dup2(fd[0], STDIN_FILENO);
-                        close(fd[0]);
-                        dup2(fd[1], STDOUT_FILENO);
-                        close(fd[1]);
+                        if (dup2(prev_fd, STDIN_FILENO) == -1)
+                        {
+                            perror("dup2");
+                            exit(EXIT_FAILURE);
+                        }
+
+                        if (dup2(fd[1], STDOUT_FILENO) == -1)
+                        {
+                            perror("dup2");
+                            exit(EXIT_FAILURE);
+                        }
+
+                        if (close(prev_fd) == -1)
+                        {
+                            perror("close");
+                            exit(EXIT_FAILURE);
+                        }
+
+                        if (close(fd[0]) == -1)
+                        {
+                            perror("close");
+                            exit(EXIT_FAILURE);
+                        }
                     }
                 }
 
                 execvp(job->commands[i]->name, job->commands[i]->args);
-            } 
+
+                // Maybe handle some error if the code reaches here
+            } else {
+                printf("Child process %d created\n", pid);
+                printf(RED "Command@%p" RESET " being executed (cmd: %s, args: [", (void*)job->commands[i], job->commands[i]->name);
+
+                for (size_t j = 0; j < job->commands[i]->nargs; ++j)
+                {
+                    printf("%s", job->commands[i]->args[j]);
+
+                    if (j < job->commands[i]->nargs - 1)
+                    {
+                        printf(",");
+                    }
+                }
+
+                printf("])\n");
+                 
+                if (job->ncommands > 1) 
+                {
+                    if (i < job->ncommands - 1)
+                    {
+                        if (close(fd[1]) == -1)
+                        {
+                            perror("close");
+                            exit(EXIT_FAILURE);
+                        }
+                    }
+
+                    prev_fd = fd[0];
+                }
+            }
 
         }
 
@@ -130,11 +187,11 @@ complex_command:
         {
             if (WIFEXITED(status))
             {
-                printf("Child process %d terminated with status %d\n", wpid, WEXITSTATUS(status));
             }
             else
             {
                 printf("Child process %d terminated abnormally\n", wpid);
+                exit(EXIT_FAILURE);
             }
         }
 
