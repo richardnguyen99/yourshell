@@ -227,6 +227,7 @@ int job_execute(struct job* job)
             // Maybe handle some error if the code reaches here
         }
         else {
+#if DEBUG
             printf("Child process %d created\n", pid);
             printf(RED "Command@%p" RESET " being executed (cmd: %s, args: [", (void*)job->commands[i], job->commands[i]->name);
 
@@ -241,6 +242,7 @@ int job_execute(struct job* job)
             }
 
             printf("])\n");
+#endif
 
             if (job->ncommands > 1)
             {
@@ -376,7 +378,9 @@ void job_prompt(struct job** job)
     buffer = yy_scan_string(line_with_newl);
     yy_switch_to_buffer(buffer);
 
+#if DEBUG
     printf(CYAN "Job@%p begins" RESET "\n", (void*)*job);
+#endif
 
     add_history(line);
     free(line);

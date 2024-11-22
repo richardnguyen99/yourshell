@@ -50,10 +50,14 @@ command:
 
 complex_command:
     command_and_args piped_list iomodifier_list ampersandmodifier SHNEWLINE {
+#if DEBUG
         printf("command_and_args piped_list iomodifier_list ampersandmodifier SHNEWLINE\n");
+#endif
     }
     | command_and_args iomodifier_list ampersandmodifier SHNEWLINE {
+#if DEBUG
         printf("command_and_args iomodifier_list ampersandmodifier SHNEWLINE\n");
+#endif
     }
     | command_and_args piped_list iomodifier_list SHNEWLINE {
         job_execute(job);
@@ -71,13 +75,17 @@ complex_command:
         job_prompt(&job);
     }
     | command_and_args iomodifier_list SHNEWLINE {
+#if DEBUG
         printf("command_and_args iomodifier_list SHNEWLINE\n");
+#endif
     }
     ;
 
 simple_command:
     command_and_args iomodifier_opt SHNEWLINE {
+#if DEBUG
         printf("simple_command\n");
+#endif
     }
     ;
 
@@ -89,7 +97,9 @@ piped_list:
 piped_command:
     PIPE command_and_args {
         job->commands[job->ncommands - 2]->is_piped = 1;
+#if DEBUG
         printf(MAGENTA "Command@%p" RESET " marked as piped\n", (void*)job->commands[job->ncommands - 2]);
+#endif
     }
     ;
 
@@ -105,14 +115,18 @@ arg_list:
 argument:
     WORD {
         command_add_arg(job->commands[job->ncommands - 1], $1);
+#if DEBUG
         printf(GREEN "Command@%p" RESET " argument being added (arg: %s)\n", (void*)job->commands[job->ncommands - 1], job->commands[job->ncommands - 1]->args[job->commands[job->ncommands - 1]->nargs - 1]);
+#endif
     }
     ;
 
 command_word:
     WORD {
         job_add_command(job, $1);
+#if DEBUG
         printf(YELLOW "Command@%p" RESET " being added (cmd: %s)\n", (void*)job->commands[job->ncommands - 1], job->commands[job->ncommands - 1]->name);
+#endif
     }
     ;
 
@@ -131,33 +145,43 @@ iomodifier:
 iomodifier_ipt:
     INPUT WORD {
         job_add_infile(job, $2);
+#if DEBUG
         printf(BLUE "Job@%p I/O INPUT MODIFIER" RESET " being added (file: %s)\n", (void*)job, $2);
+#endif
     }
     ;
 
 ampersandappendmodifier:
     AMPERSANDAPPEND WORD {
+#if DEBUG
         printf("ampersandappendmodifier: &>> %s\n", $2);
+#endif
     }
 
 iomodifier_opt:
     REDIRECT WORD {
         job_add_outfile(job, $2);
+#if DEBUG
         printf(BLUE "Job@%p I/O REDIRECT MODIFIER" RESET " being added (file: %s)\n", (void*)job, $2);
+#endif
     }
     ;
 
 appendmodifier:
     APPEND WORD {
         // Insert append modifier into the current command
+#if DEBUG
         printf("appendmodifier: >> %s\n", $2);
+#endif
     }
     ;
 
 ampersandmodifier:
     AMPERSAND {
         // Set background flag in the current command
+#if DEBUG
         printf("ampersandmodifier (run in background): &\n");
+#endif
     }
     ;
 

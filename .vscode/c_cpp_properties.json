@@ -9,7 +9,7 @@
         "./include",
         "./src"
       ],
-      "defines": ["_POSIX_C_SOURCE=200809L"],
+      "defines": ["_POSIX_C_SOURCE=200809L", "DEBUG"],
       "compilerPath": "/usr/bin/gcc",
       "intelliSenseMode": "linux-gcc-x64"
     }
