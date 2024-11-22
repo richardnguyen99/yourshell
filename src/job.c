@@ -16,6 +16,11 @@ struct job*
         return NULL;
     }
 
+    for (size_t i = 0; i < MAX_COMMANDS; i++)
+    {
+        job->commands[i] = NULL;
+    }
+
     job->ncommands = 0;
     job->ncommands_executed = 0;
 

@@ -53,6 +53,8 @@ void
 setup_signal_handler()
 {
     struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+
     sa.sa_handler = handle_ctrl_c;
     sa.sa_flags = SA_RESTART;
     sigaction(SIGINT, &sa, NULL);

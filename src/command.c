@@ -2,7 +2,7 @@
 
 struct command* command_new(const char* name)
 {
-    struct command* cmd = malloc(sizeof(struct command));
+    struct command* cmd = calloc(1, sizeof(struct command));
     if (cmd == NULL)
     {
         return NULL;

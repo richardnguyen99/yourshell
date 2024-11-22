@@ -53,6 +53,7 @@ dkms.conf
 
 # Build results
 yrsh
+yrsh-debug
 
 # Lexical and grammar generated files
 *.yy.*
