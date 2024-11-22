@@ -2,6 +2,7 @@
 #include <yrsh.h>
 #include <command.h>
 #include <job.h>
+#include <lex.yy.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,6 +14,8 @@ extern "C" {
 #endif
 
 #define yylex yylex
+
+extern YY_BUFFER_STATE buffer;
 %}
 
 %token <string_val> WORD
@@ -36,7 +39,12 @@ commands:
 command:
     complex_command
     | simple_command
-    | SHNEWLINE 
+    | SHNEWLINE {
+        yy_delete_buffer(buffer);
+        job_free(job);
+        job = NULL;
+        job_prompt(&job);
+    }
     | error SHNEWLINE { yyerrok; }
     ;
 
@@ -56,6 +64,10 @@ complex_command:
             yylval.string_val = NULL;
         }
 
+        job_free(job);
+        job = NULL;
+
+        yy_delete_buffer(buffer);
         job_prompt(&job);
     }
     | command_and_args iomodifier_list SHNEWLINE {

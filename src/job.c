@@ -5,6 +5,8 @@ extern char* line;
 extern int yyparse(void);
 extern void format_current_path(char* path, const size_t size);
 
+YY_BUFFER_STATE buffer;
+
 struct job*
     job_new()
 {
@@ -346,6 +348,12 @@ void job_prompt(struct job** job)
     if (line == NULL)
         exit(EXIT_FAILURE);
 
+    if (strlen(line) == 0)
+    {
+        free(line);
+        job_prompt(job);
+    }
+
     /* Create a new string with new line for lexer only.
        Meanwhile, readline does not need new line characters at the end of
        the string because it will mess up the history.
@@ -360,25 +368,20 @@ void job_prompt(struct job** job)
     strcat(line_with_newl, "\n");
 
     /* Switch lexer to use buffer instead of stdin */
-    YY_BUFFER_STATE buffer = yy_scan_string(line_with_newl);
+    buffer = yy_scan_string(line_with_newl);
     yy_switch_to_buffer(buffer);
 
     printf(CYAN "Job@%p begins" RESET "\n", (void*)*job);
+
+    add_history(line);
+    free(line);
+    free(line_with_newl);
+    line = NULL;
 
     int status = yyparse();
 
     if (status == 1)
         fprintf(stderr, "Syntax error\n");
-
-    add_history(line);
-
-    yy_delete_buffer(buffer);
-    free(line);
-    free(line_with_newl);
-    job_free(*job);
-
-    *job = NULL;
-    line = NULL;
 }
 
 void
