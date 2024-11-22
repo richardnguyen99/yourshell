@@ -9,23 +9,8 @@ struct job* job;
 
 void handle_ctrl_c(int sig)
 {
-
-    if (job != NULL)
-    {
-        job_free(job);
-        job = NULL;
-    }
-
-    if (line != NULL)
-    {
-        free(line);
-        line = NULL;
-    }
-
-    printf("\nExited yourshell (signo: %d)\n", sig);
-    fflush(stdout);
-
-    exit(0);
+    (void)sig;
+    job_prompt(&job);
 }
 
 void handle_sig_child(int sig)

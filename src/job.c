@@ -122,6 +122,16 @@ int job_add_appendfile(struct job* job, const char* appendfile)
     return 0;
 }
 
+int job_exiting(const char* path)
+{
+    if (strcmp(path, "exit") == 0)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
 int job_execute(struct job* job)
 {
     int fd[2];
@@ -129,6 +139,14 @@ int job_execute(struct job* job)
 
     for (size_t i = 0; i < job->ncommands; ++i)
     {
+        if (job_exiting(job->commands[i]->name) == 1)
+        {
+            job_free(job);
+            printf("Exited yourshell\n");
+            fflush(stdout);
+            exit(EXIT_SUCCESS);
+        }
+
         /* Check if the command is cd */
         if (strcmp(job->commands[i]->name, "cd") == 0)
         {
@@ -360,6 +378,8 @@ void job_prompt(struct job** job)
         free(line);
         job_prompt(job);
     }
+
+    fflush(stdout);
 
     /* Create a new string with new line for lexer only.
        Meanwhile, readline does not need new line characters at the end of
