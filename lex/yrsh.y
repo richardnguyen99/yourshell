@@ -85,6 +85,20 @@ simple_command:
     command_and_args iomodifier_opt SHNEWLINE {
 #if DEBUG
         printf("simple_command\n");
+
+        job_execute(job);
+
+        if (yylval.string_val != NULL)
+        {
+            free(yylval.string_val);
+            yylval.string_val = NULL;
+        }
+
+        job_free(job);
+        job = NULL;
+
+        yy_delete_buffer(buffer);
+        job_prompt(&job);
 #endif
     }
     ;
