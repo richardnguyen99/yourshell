@@ -16,34 +16,6 @@ handle_ctrl_c(int sig)
 }
 
 void
-handle_sig_child(int sig)
-{
-    int status;
-    pid_t pid;
-
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
-    {
-        if (WIFEXITED(status))
-        {
-            printf(
-                "Process %d exited with status %d (signo: %d)\n", pid,
-                WEXITSTATUS(status), sig
-            );
-        }
-        else if (WIFSIGNALED(status))
-        {
-            printf(
-                "Process %d terminated by signal %d (signo: %d)\n", pid,
-                WTERMSIG(status), sig
-            );
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    return;
-}
-
-void
 setup_signal_handler()
 {
     struct sigaction sa;
@@ -52,10 +24,6 @@ setup_signal_handler()
     sa.sa_handler = handle_ctrl_c;
     sa.sa_flags   = SA_RESTART;
     sigaction(SIGINT, &sa, NULL);
-
-    sa.sa_handler = handle_sig_child;
-    sa.sa_flags   = SA_RESTART;
-    sigaction(SIGCHLD, &sa, NULL);
 }
 
 void

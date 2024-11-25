@@ -53,11 +53,37 @@ complex_command:
 #if DEBUG
         printf("command_and_args piped_list iomodifier_list ampersandmodifier SHNEWLINE\n");
 #endif
+        job_execute(job);
+
+        if (yylval.string_val != NULL)
+        {
+            free(yylval.string_val);
+            yylval.string_val = NULL;
+        }
+
+        job_free(job);
+        job = NULL;
+
+        yy_delete_buffer(buffer);
+        job_prompt(&job);
     }
     | command_and_args iomodifier_list ampersandmodifier SHNEWLINE {
 #if DEBUG
         printf("command_and_args iomodifier_list ampersandmodifier SHNEWLINE\n");
 #endif
+        job_execute(job);
+
+        if (yylval.string_val != NULL)
+        {
+            free(yylval.string_val);
+            yylval.string_val = NULL;
+        }
+
+        job_free(job);
+        job = NULL;
+
+        yy_delete_buffer(buffer);
+        job_prompt(&job);
     }
     | command_and_args piped_list iomodifier_list SHNEWLINE {
         job_execute(job);
@@ -216,6 +242,7 @@ ampersandmodifier:
 #if DEBUG
         printf("ampersandmodifier (run in background): &\n");
 #endif
+    job->background = 1;
     }
     ;
 

@@ -336,6 +336,28 @@ job_execute(struct job *job)
                 }
             }
 
+            /* Close standout and standerr if  the job is background */
+            if (job->background == 1)
+            {
+                if (job->outfile == NULL)
+                {
+                    if (close(STDOUT_FILENO) == -1)
+                    {
+                        perror("close");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+
+                if (job->errfile == NULL)
+                {
+                    if (close(STDERR_FILENO) == -1)
+                    {
+                        perror("close");
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
+
             execvp(job->commands[i]->name, job->commands[i]->args);
 
             // Maybe handle some error if the code reaches here
@@ -416,15 +438,18 @@ job_execute(struct job *job)
     int status;
     pid_t wpid;
 
-    while ((wpid = waitpid(-1, &status, 0)) > 0)
+    if (job->background == 0 || job->infile != NULL || job->outfile != NULL)
     {
-        if (WIFEXITED(status))
+        while ((wpid = waitpid(-1, &status, 0)) > 0)
         {
-        }
-        else
-        {
-            printf("Child process %d terminated abnormally\n", wpid);
-            return -1;
+            if (WIFEXITED(status))
+            {
+            }
+            else
+            {
+                printf("Child process %d terminated abnormally\n", wpid);
+                return -1;
+            }
         }
     }
 
