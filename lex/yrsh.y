@@ -19,7 +19,7 @@ extern YY_BUFFER_STATE buffer;
 %}
 
 %token <string_val> WORD
-%token NOTOKEN GREAT SHNEWLINE AMPERSAND PIPE APPEND SMALL AMPERSANDAPPEND AND OR SEMICOLON REDIRECT INPUT
+%token NOTOKEN GREAT SHNEWLINE AMPERSAND PIPE APPEND SMALL AMPERSANDAPPEND AND OR SEMICOLON REDIRECT INPUT ERRORREDIRECT
 
 %union {
     char *string_val;
@@ -78,14 +78,6 @@ complex_command:
 #if DEBUG
         printf("command_and_args iomodifier_list SHNEWLINE\n");
 #endif
-    }
-    ;
-
-simple_command:
-    command_and_args iomodifier_opt SHNEWLINE {
-#if DEBUG
-        printf("simple_command\n");
-
         job_execute(job);
 
         if (yylval.string_val != NULL)
@@ -99,7 +91,24 @@ simple_command:
 
         yy_delete_buffer(buffer);
         job_prompt(&job);
-#endif
+    }
+    ;
+
+simple_command:
+    command_and_args SHNEWLINE {
+        job_execute(job);
+
+        if (yylval.string_val != NULL)
+        {
+            free(yylval.string_val);
+            yylval.string_val = NULL;
+        }
+
+        job_free(job);
+        job = NULL;
+
+        yy_delete_buffer(buffer);
+        job_prompt(&job);
     }
     ;
 
@@ -151,6 +160,7 @@ iomodifier_list:
 
 iomodifier:
     iomodifier_opt
+    | iomodifier_err
     | ampersandappendmodifier
     | iomodifier_ipt
     | appendmodifier
@@ -171,12 +181,22 @@ ampersandappendmodifier:
         printf("ampersandappendmodifier: &>> %s\n", $2);
 #endif
     }
+    ;
 
 iomodifier_opt:
     REDIRECT WORD {
         job_add_outfile(job, $2);
 #if DEBUG
         printf(BLUE "Job@%p I/O REDIRECT MODIFIER" RESET " being added (file: %s)\n", (void*)job, $2);
+#endif
+    }
+    ;
+
+iomodifier_err:
+    ERRORREDIRECT WORD {
+        job_add_errfile(job, $2);
+#if DEBUG
+        printf(BLUE "Job@%p I/O ERRORREDIRECT MODIFIER" RESET " being added (file: %s)\n", (void*)job, $2);
 #endif
     }
     ;

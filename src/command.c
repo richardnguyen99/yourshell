@@ -1,8 +1,9 @@
 #include <command.h>
 
-struct command* command_new(const char* name)
+struct command *
+command_new(const char *name)
 {
-    struct command* cmd = calloc(1, sizeof(struct command));
+    struct command *cmd = calloc(1, sizeof(struct command));
     if (cmd == NULL)
     {
         return NULL;
@@ -32,7 +33,8 @@ struct command* command_new(const char* name)
     return cmd;
 }
 
-int command_add_arg(struct command* cmd, const char* arg)
+int
+command_add_arg(struct command *cmd, const char *arg)
 {
     if (cmd->nargs >= MAX_ARGS)
     {
@@ -51,7 +53,8 @@ int command_add_arg(struct command* cmd, const char* arg)
     return 0;
 }
 
-void command_free(struct command* cmd)
+void
+command_free(struct command *cmd)
 {
     free(cmd->name);
 
@@ -61,7 +64,7 @@ void command_free(struct command* cmd)
         cmd->args[i] = NULL;
     }
 
-    cmd->name = NULL;
+    cmd->name  = NULL;
     cmd->nargs = 0;
 
     free(cmd);

@@ -1,19 +1,22 @@
-#include <yrsh.h>
 #include <job.h>
 #include <lex.yy.h>
+#include <yrsh.h>
 
-extern int yyparse(void);
+extern int
+yyparse(void);
 
-char* line;
-struct job* job;
+char *line;
+struct job *job;
 
-void handle_ctrl_c(int sig)
+void
+handle_ctrl_c(int sig)
 {
     (void)sig;
     job_prompt(&job);
 }
 
-void handle_sig_child(int sig)
+void
+handle_sig_child(int sig)
 {
     int status;
     pid_t pid;
@@ -22,11 +25,17 @@ void handle_sig_child(int sig)
     {
         if (WIFEXITED(status))
         {
-            printf("Process %d exited with status %d (signo: %d)\n", pid, WEXITSTATUS(status), sig);
+            printf(
+                "Process %d exited with status %d (signo: %d)\n", pid,
+                WEXITSTATUS(status), sig
+            );
         }
         else if (WIFSIGNALED(status))
         {
-            printf("Process %d terminated by signal %d (signo: %d)\n", pid, WTERMSIG(status), sig);
+            printf(
+                "Process %d terminated by signal %d (signo: %d)\n", pid,
+                WTERMSIG(status), sig
+            );
             exit(EXIT_FAILURE);
         }
     }
@@ -41,15 +50,16 @@ setup_signal_handler()
     memset(&sa, 0, sizeof(sa));
 
     sa.sa_handler = handle_ctrl_c;
-    sa.sa_flags = SA_RESTART;
+    sa.sa_flags   = SA_RESTART;
     sigaction(SIGINT, &sa, NULL);
 
     sa.sa_handler = handle_sig_child;
-    sa.sa_flags = SA_RESTART;
+    sa.sa_flags   = SA_RESTART;
     sigaction(SIGCHLD, &sa, NULL);
 }
 
-void format_current_path(char* path, const size_t size)
+void
+format_current_path(char *path, const size_t size)
 {
     if (path == NULL)
         return;
@@ -60,13 +70,13 @@ void format_current_path(char* path, const size_t size)
         return;
     }
 
-    char* home = getenv("HOME");
+    char *home = getenv("HOME");
     if (home == NULL)
         return;
 
     if (strncmp(path, home, strlen(home)) == 0)
     {
-        char* new_path = malloc(size);
+        char *new_path = malloc(size);
         if (new_path == NULL)
             return;
 

@@ -13,7 +13,7 @@ static const char *
 get_debug_mode()
 {
 #if DEBUG
-    return BLUE "[DEBUG]" RESET;
+    return BLUE " [DEBUG]" RESET;
 #else
     return "";
 #endif
@@ -327,9 +327,25 @@ job_execute(struct job *job)
                 }
             }
 
+            if (errfd > 0 && i == job->ncommands - 1)
+            {
+                if (dup2(errfd, STDERR_FILENO) == -1)
+                {
+                    perror("dup2: errfd");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
             execvp(job->commands[i]->name, job->commands[i]->args);
 
             // Maybe handle some error if the code reaches here
+
+            fprintf(
+                stderr, "yrsh: %s: commmand not found...\n",
+                job->commands[i]->name
+            );
+
+            exit(EXIT_FAILURE);
         }
         else
         {
@@ -488,7 +504,7 @@ job_prompt(struct job **job)
     char prompt[4096];
     memset(prompt, 0, sizeof(prompt));
     snprintf(
-        prompt, sizeof(prompt), GREEN "yrsh" RESET "@" GREEN "%s" RESET " %s> ",
+        prompt, sizeof(prompt), GREEN "yrsh" RESET "@" GREEN "%s" RESET "%s> ",
         path, get_debug_mode()
     );
 

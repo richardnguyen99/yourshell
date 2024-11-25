@@ -3,7 +3,7 @@
 void
 dumb_shell()
 {
-    char* line = NULL;
+    char *line = NULL;
 
     for (;;)
     {

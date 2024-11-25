@@ -11,7 +11,8 @@
       ],
       "defines": ["_POSIX_C_SOURCE=200809L", "DEBUG"],
       "compilerPath": "/usr/bin/gcc",
-      "intelliSenseMode": "linux-gcc-x64"
+      "intelliSenseMode": "linux-gcc-x64",
+      "configurationProvider": "ms-vscode.cmake-tools"
     }
   ],
   "version": 4

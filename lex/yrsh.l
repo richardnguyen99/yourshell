@@ -50,6 +50,14 @@
     return REDIRECT;
 }
 
+"1>" {
+    return REDIRECT;
+}
+
+"2>" {
+    return ERRORREDIRECT;
+}
+
 "<" {
     return INPUT;
 }

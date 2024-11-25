@@ -9,10 +9,10 @@
 struct command
 {
     /* command name such as `ls`, `cat`, `wc` or any executables */
-    char* name;
+    char *name;
 
     /* arguments and options that will be passed to the commmand */
-    char* args[MAX_ARGS];
+    char *args[MAX_ARGS];
 
     /* Flag to either print the output to STDOUT or pass output to other process
      STDIN */
@@ -22,16 +22,18 @@ struct command
     size_t nargs;
 };
 
-
 /* construct a new command buffer. The function returns `NULL` if there is an
 allocating error. */
-struct command* command_new(const char* name);
+struct command *
+command_new(const char *name);
 
 /* add arguments to an existing command buffer. The function returns -1 if
 either there is no space for new arguments or there is an allocating error.  */
-int command_add_arg(struct command* cmd, const char* arg);
+int
+command_add_arg(struct command *cmd, const char *arg);
 
 /* free the command buffer */
-void command_free(struct command* cmd);
+void
+command_free(struct command *cmd);
 
 #endif // __COMMAND_H__
